@@ -1,15 +1,15 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform, Linking, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { FontWeight, Spacing, BorderRadius } from '../../constants';
 import { useColors } from '../../hooks/useColors';
 import { PrimaryButton, Card } from '../../components/common';
-import { Product } from '../../types/product';
+import { BlockchainProduct, getExplorerTxUrl } from '../../services';
 import { formatUSD, formatPercentage } from '../../utils/format';
 
 interface DepositCompleteScreenProps {
-  product: Product;
+  product: BlockchainProduct;
   amount: number;
   asset: string;
   txHash: string;
@@ -45,12 +45,34 @@ export default function DepositCompleteScreen({
     ]).start();
   }, [checkScale, contentOpacity]);
 
-  const estimatedYearly = amount * (product.maxApy / 100);
+  const estimatedYearly = amount * (product.apy / 100);
   const shortHash = `${txHash.slice(0, 10)}...${txHash.slice(-8)}`;
+  const isSimulated = txHash.length === 66 && !txHash.startsWith('0x0'); // 시뮬레이션 여부 확인
+
+  const handleCopyTxHash = async () => {
+    try {
+      const Clipboard = await import('expo-clipboard');
+      await Clipboard.setStringAsync(txHash);
+      Alert.alert('복사됨', '트랜잭션 해시가 클립보드에 복사되었습니다.');
+    } catch {
+      // Clipboard not available, show the full hash in an alert
+      Alert.alert('트랜잭션 해시', txHash);
+    }
+  };
+
+  const handleViewOnExplorer = () => {
+    if (!isSimulated) {
+      Linking.openURL(getExplorerTxUrl(txHash));
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Success Icon */}
         <Animated.View style={[styles.checkContainer, { backgroundColor: colors.primary, transform: [{ scale: checkScale }] }]}>
           <Ionicons name="checkmark" size={48} color={colors.buttonPrimaryText} />
@@ -59,37 +81,63 @@ export default function DepositCompleteScreen({
         <Animated.View style={[styles.infoContainer, { opacity: contentOpacity }]}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>예치 완료!</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            성공적으로 예치가 완료되었습니다.{'\n'}이제 매일 이자를 받아보세요!
+            성공적으로 예치가 완료되었습니다.{'\n'}토큰 가치 상승으로 수익이 발생합니다!
           </Text>
 
           {/* Deposit Summary */}
           <Card variant="dark" style={styles.summaryCard}>
-            <SummaryRow label="상품" value={product.name} />
+            <SummaryRow label="상품" value={product.displayName} />
             <SummaryRow label="예치 금액" value={`${formatUSD(amount)} ${asset}`} highlight />
-            <SummaryRow label="연 수익률 (APY)" value={formatPercentage(product.maxApy)} highlight />
+            <SummaryRow label="연 수익률 (APY)" value={formatPercentage(product.apy)} highlight />
             <SummaryRow label="예상 연간 수익" value={`~${formatUSD(estimatedYearly)} ${asset}`} />
-            <SummaryRow label="상품 유형" value={product.type === 'flexible' ? '자유 입출금' : `락업 ${product.lockupDays}일`} />
-            <SummaryRow label="Tx Fee" value="무료" highlight isLast />
+            <SummaryRow label="수령 토큰" value={product.receiveToken} />
+            <SummaryRow label="수익 방식" value="토큰 가격 상승" isLast />
           </Card>
 
           {/* Transaction Hash */}
-          <TouchableOpacity style={[styles.txRow, { backgroundColor: colors.surface }]} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={[styles.txRow, { backgroundColor: colors.surface }]}
+            activeOpacity={0.7}
+            onPress={handleCopyTxHash}
+          >
             <Text style={[styles.txLabel, { color: colors.textMuted }]}>Tx Hash</Text>
             <View style={styles.txValueRow}>
               <Text style={[styles.txHash, { color: colors.textSecondary }]}>{shortHash}</Text>
               <Ionicons name="copy-outline" size={14} color={colors.textMuted} />
             </View>
           </TouchableOpacity>
-        </Animated.View>
-      </View>
 
-      {/* Bottom Buttons */}
-      <Animated.View style={[styles.bottomContainer, { opacity: contentOpacity }]}>
-        <PrimaryButton title="홈으로 돌아가기" onPress={onGoHome} />
-        <TouchableOpacity style={styles.secondaryAction} onPress={onViewProducts}>
-          <Text style={[styles.secondaryActionText, { color: colors.textSecondary }]}>다른 상품 둘러보기</Text>
-        </TouchableOpacity>
-      </Animated.View>
+          {/* Explorer Link */}
+          {!isSimulated && (
+            <TouchableOpacity
+              style={styles.explorerLink}
+              onPress={handleViewOnExplorer}
+            >
+              <Text style={[styles.explorerLinkText, { color: colors.primary }]}>
+                Etherscan에서 확인 →
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Simulated Notice */}
+          {isSimulated && (
+            <View style={[styles.noticeBox, { backgroundColor: colors.surfaceLight }]}>
+              <Ionicons name="information-circle-outline" size={16} color={colors.textMuted} />
+              <Text style={[styles.noticeText, { color: colors.textMuted }]}>
+                시뮬레이션 모드로 예치가 진행되었습니다
+              </Text>
+            </View>
+          )}
+        </Animated.View>
+
+        {/* Bottom Buttons */}
+        <Animated.View style={[styles.bottomContainer, { opacity: contentOpacity }]}>
+          <PrimaryButton title="홈으로 돌아가기" onPress={onGoHome} />
+          <TouchableOpacity style={styles.secondaryAction} onPress={onViewProducts}>
+            <Text style={[styles.secondaryActionText, { color: colors.textSecondary }]}>상품 화면으로</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -137,8 +185,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     alignItems: 'center',
     paddingTop: 60,
     paddingHorizontal: Spacing.lg,
@@ -178,6 +229,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.base,
     borderRadius: BorderRadius.md,
+    marginBottom: Spacing.lg,
   },
   txLabel: {
     fontSize: 13,
@@ -191,8 +243,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
+  explorerLink: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  explorerLinkText: {
+    fontSize: 14,
+    fontWeight: FontWeight.medium,
+  },
+  noticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  noticeText: {
+    fontSize: 12,
+  },
   bottomContainer: {
-    paddingHorizontal: Spacing.lg,
+    width: '100%',
+    marginTop: 'auto',
+    paddingTop: Spacing['3xl'],
     paddingBottom: Spacing['2xl'],
     gap: Spacing.md,
   },

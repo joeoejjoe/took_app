@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import EmailLoginScreen from '../screens/Auth/EmailLoginScreen';
 import VerifyCodeScreen from '../screens/Auth/VerifyCodeScreen';
 import WalletConnectScreen from '../screens/Auth/WalletConnectScreen';
 import { useAuthStore } from '../store/useAuthStore';
+import { useColors } from '../hooks/useColors';
+import { sendOTP, verifyOTPAndLogin, initializeUserAssets } from '../services';
+import { auth } from '../config/firebase';
 
-type AuthStep = 'email' | 'verify' | 'wallet';
+type AuthStep = 'email' | 'sending' | 'verify' | 'wallet' | 'checking';
 
 interface AuthNavigatorProps {
   onBack: () => void;
   onComplete: () => void;
 }
 
-// 임시 비밀번호 생성 (이메일 기반)
-const generatePassword = (email: string) => `Took!${email.split('@')[0]}2024`;
-
 export default function AuthNavigator({ onBack, onComplete }: AuthNavigatorProps) {
-  const { signUp, signIn, setError, error, isAuthenticated, walletAddress } = useAuthStore();
+  const { loadUserProfile, isAuthenticated, walletAddress } = useAuthStore();
+  const colors = useColors();
 
   // 이미 로그인되어 있고 지갑 주소가 없으면 바로 wallet 단계로
   const initialStep: AuthStep = isAuthenticated && !walletAddress ? 'wallet' : 'email';
@@ -25,41 +26,93 @@ export default function AuthNavigator({ onBack, onComplete }: AuthNavigatorProps
 
   // 인증 상태 변경 시 step 업데이트
   useEffect(() => {
-    if (isAuthenticated && !walletAddress && step !== 'wallet') {
+    if (isAuthenticated && !walletAddress && step !== 'wallet' && step !== 'checking') {
       setStep('wallet');
     }
   }, [isAuthenticated, walletAddress, step]);
 
-  const handleEmailSubmit = (submittedEmail: string) => {
+  const handleEmailSubmit = async (submittedEmail: string) => {
     setEmail(submittedEmail);
-    setStep('verify');
-  };
-
-  const handleVerify = async (_code: string) => {
-    const password = generatePassword(email);
+    setStep('sending');
 
     try {
-      // 먼저 로그인 시도
-      await signIn(email, password);
-      setStep('wallet');
-    } catch {
-      try {
-        // 로그인 실패 시 회원가입 시도
-        await signUp(email, password);
-        setStep('wallet');
-      } catch (signUpError: unknown) {
-        const message = signUpError instanceof Error
-          ? signUpError.message
-          : '인증에 실패했습니다.';
-        Alert.alert('오류', message);
-      }
+      // 실제 OTP 발송
+      await sendOTP(submittedEmail);
+      setStep('verify');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : '인증 코드 발송에 실패했습니다.';
+      setStep('email');
+      Alert.alert('오류', message);
     }
   };
 
-  const handleResend = () => {
-    // 인증 코드 재전송 (현재 이메일/비밀번호 방식이므로 안내만)
-    Alert.alert('안내', '인증 코드가 재전송되었습니다.');
+  const handleVerify = async (code: string) => {
+    setStep('checking'); // 로딩 화면 표시
+
+    try {
+      // OTP 검증 및 로그인
+      await verifyOTPAndLogin(email, code);
+
+      // 신규 사용자를 위한 자산 초기화
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        try {
+          await initializeUserAssets(currentUser.uid);
+        } catch {
+          // 이미 존재하면 무시
+        }
+      }
+
+      // 프로필 로드
+      await loadUserProfile();
+
+      // 지갑 주소가 이미 있으면 바로 완료
+      const { walletAddress: existingWallet } = useAuthStore.getState();
+      if (existingWallet) {
+        onComplete();
+      } else {
+        setStep('wallet');
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : '인증에 실패했습니다.';
+      setStep('verify'); // 에러 시 verify 화면으로 복귀
+      Alert.alert('오류', message);
+    }
   };
+
+  const handleResend = async () => {
+    try {
+      await sendOTP(email);
+      Alert.alert('안내', '인증 코드가 재전송되었습니다.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : '재전송에 실패했습니다.';
+      Alert.alert('오류', message);
+    }
+  };
+
+  // OTP 발송 중 화면
+  if (step === 'sending') {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          인증 코드 발송 중...
+        </Text>
+      </View>
+    );
+  }
+
+  // 로딩/확인 중 화면
+  if (step === 'checking') {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          계정 확인 중...
+        </Text>
+      </View>
+    );
+  }
 
   if (step === 'wallet') {
     return (
@@ -85,7 +138,19 @@ export default function AuthNavigator({ onBack, onComplete }: AuthNavigatorProps
     <EmailLoginScreen
       onSubmit={handleEmailSubmit}
       onBack={onBack}
-      onSkip={onComplete}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 12,
+  },
+});

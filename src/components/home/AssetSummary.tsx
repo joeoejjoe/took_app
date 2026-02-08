@@ -2,20 +2,20 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontWeight, Spacing } from '../../constants';
 import { useColors } from '../../hooks/useColors';
-import { formatKRW } from '../../utils/format';
+import { formatUSD } from '../../utils/format';
 
 interface AssetSummaryProps {
-  totalAssetKRW: number;
+  totalAssetUSD: number;
 }
 
-export default function AssetSummary({ totalAssetKRW }: AssetSummaryProps) {
+export default function AssetSummary({ totalAssetUSD }: AssetSummaryProps) {
   const colors = useColors();
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>나의 총 자산은</Text>
+      <Text style={[styles.label, { color: colors.textSecondary }]}>나의 총 자산</Text>
       <Text style={[styles.amount, { color: colors.primary }]}>
-        {formatKRW(totalAssetKRW)}<Text style={[styles.unit, { color: colors.primary }]}>원</Text>
+        <Text style={[styles.unit, { color: colors.primary }]}>$</Text>{formatUSD(totalAssetUSD)}
       </Text>
     </View>
   );

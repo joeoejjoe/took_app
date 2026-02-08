@@ -6,7 +6,7 @@ import CustomTabBar from '../components/common/CustomTabBar';
 import HomeScreen from '../screens/Home/HomeScreen';
 import ProductsScreen from '../screens/Products/ProductsScreen';
 import ExchangeScreen from '../screens/Exchange/ExchangeScreen';
-import TransferScreen from '../screens/Transfer/TransferScreen';
+import RankingScreen from '../screens/Ranking/RankingScreen';
 import MyScreen from '../screens/My/MyScreen';
 
 const Tab = createBottomTabNavigator();
@@ -14,7 +14,7 @@ const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
 const ProductsStack = createNativeStackNavigator();
 const ExchangeStack = createNativeStackNavigator();
-const TransferStack = createNativeStackNavigator();
+const RankingStack = createNativeStackNavigator();
 const MyStack = createNativeStackNavigator();
 
 function HomeStackScreen() {
@@ -41,11 +41,11 @@ function ExchangeStackScreen() {
   );
 }
 
-function TransferStackScreen() {
+function RankingStackScreen() {
   return (
-    <TransferStack.Navigator screenOptions={{ headerShown: false }}>
-      <TransferStack.Screen name="TransferMain" component={TransferScreen} />
-    </TransferStack.Navigator>
+    <RankingStack.Navigator screenOptions={{ headerShown: false }}>
+      <RankingStack.Screen name="RankingMain" component={RankingScreen} />
+    </RankingStack.Navigator>
   );
 }
 
@@ -66,7 +66,7 @@ export default function TabNavigator() {
       <Tab.Screen name="Home" component={HomeStackScreen} />
       <Tab.Screen name="Products" component={ProductsStackScreen} />
       <Tab.Screen name="Exchange" component={ExchangeStackScreen} />
-      <Tab.Screen name="Transfer" component={TransferStackScreen} />
+      <Tab.Screen name="Ranking" component={RankingStackScreen} />
       <Tab.Screen name="My" component={MyStackScreen} />
     </Tab.Navigator>
   );

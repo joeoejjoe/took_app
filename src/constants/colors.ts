@@ -1,57 +1,87 @@
+// Primary Green 팔레트
+const PrimaryGreen = {
+  50: '#ECFDF5',
+  100: '#D1FAE5',
+  200: '#A7F3D0',
+  300: '#6EE7B7',
+  400: '#4ADE80', // Primary
+  500: '#22C55E',
+  600: '#16A34A',
+  700: '#15803D',
+  800: '#166534',
+  900: '#14532D',
+  950: '#052E16',
+} as const;
+
+// Dark 팔레트
+const DarkGreen = {
+  50: '#F3FAF8',
+  100: '#D7F0EB',
+  200: '#AFE0D6',
+  300: '#7FC9BC',
+  400: '#54ADA1',
+  500: '#3B9187',
+  600: '#2D746D',
+  700: '#275E59',
+  800: '#234C49',
+  900: '#21403E',
+  950: '#0D1F1E', // Primary Dark
+} as const;
+
 const DarkColors = {
   // Background
-  background: '#0D0F1A',
-  surface: '#1A1D2E',
-  surfaceLight: '#242738',
-  surfaceElevated: '#2A2D3E',
+  background: DarkGreen[950],
+  surface: '#1A2E2D',
+  surfaceLight: '#243F3D',
+  surfaceElevated: '#2A4745',
 
   // Card
-  card: '#1E2132',
-  cardDark: '#1A1D2E',
+  card: '#1E3836',
+  cardDark: '#1A2E2D',
   cardLight: '#FFFFFF',
 
-  // Primary (Green accent)
-  primary: '#4ADE80',
-  primaryDark: '#22C55E',
-  primaryMuted: '#166534',
-  primaryBg: 'rgba(74, 222, 128, 0.1)',
-  primaryBgStrong: 'rgba(74, 222, 128, 0.15)',
+  // Primary (Green)
+  primary: PrimaryGreen[400],
+  primaryDark: PrimaryGreen[500],
+  primaryMuted: PrimaryGreen[700],
+  primaryBg: `${PrimaryGreen[400]}15`,
+  primaryBgStrong: `${PrimaryGreen[400]}22`,
 
   // Text
   textPrimary: '#FFFFFF',
   textSecondary: '#9CA3AF',
   textMuted: '#6B7280',
-  textDark: '#1F2937',
-  textGreen: '#4ADE80',
+  textDark: DarkGreen[950],
+  textGreen: PrimaryGreen[400],
   textRed: '#EF4444',
 
   // Status
-  success: '#4ADE80',
+  success: PrimaryGreen[400],
   error: '#EF4444',
   warning: '#F59E0B',
   info: '#3B82F6',
 
   // Border
-  border: '#2D3044',
+  border: '#2D4644',
   borderLight: '#E5E7EB',
-  borderMuted: '#374151',
+  borderMuted: '#375553',
 
   // Button
-  buttonPrimary: '#4ADE80',
-  buttonPrimaryText: '#0D0F1A',
-  buttonSecondary: '#1A1D2E',
-  buttonSecondaryText: '#4ADE80',
+  buttonPrimary: PrimaryGreen[400],
+  buttonPrimaryText: DarkGreen[950],
+  buttonSecondary: '#1A2E2D',
+  buttonSecondaryText: PrimaryGreen[400],
   buttonEnabled: '#6B7280',
   buttonDisabled: '#4B5563',
   buttonDisabledText: '#9CA3AF',
 
   // Alert banner
-  alertBg: 'rgba(74, 222, 128, 0.08)',
-  alertBorder: 'rgba(74, 222, 128, 0.2)',
+  alertBg: `${PrimaryGreen[400]}12`,
+  alertBorder: `${PrimaryGreen[400]}33`,
 
   // Tab bar
-  tabBarBg: '#1A1D2E',
-  tabBarActive: '#4ADE80',
+  tabBarBg: '#1A2E2D',
+  tabBarActive: PrimaryGreen[400],
   tabBarInactive: '#6B7280',
 
   // Misc
@@ -61,41 +91,41 @@ const DarkColors = {
   black: '#000000',
 
   // Chart
-  chartLine: '#4ADE80',
-  chartGrid: '#2D3044',
+  chartLine: PrimaryGreen[400],
+  chartGrid: '#2D4644',
 } as const;
 
 type ColorScheme = { [K in keyof typeof DarkColors]: string };
 
 const LightColors: ColorScheme = {
   // Background
-  background: '#F5F5F7',
+  background: '#F5F7F6',
   surface: '#FFFFFF',
-  surfaceLight: '#F0F0F2',
+  surfaceLight: PrimaryGreen[50],
   surfaceElevated: '#FFFFFF',
 
   // Card
   card: '#FFFFFF',
-  cardDark: '#F5F5F7',
+  cardDark: '#F5F7F6',
   cardLight: '#FFFFFF',
 
-  // Primary (Green accent)
-  primary: '#22C55E',
-  primaryDark: '#16A34A',
-  primaryMuted: '#BBF7D0',
-  primaryBg: 'rgba(34, 197, 94, 0.08)',
-  primaryBgStrong: 'rgba(34, 197, 94, 0.12)',
+  // Primary (Green - 좀 더 진한 톤으로)
+  primary: PrimaryGreen[500],
+  primaryDark: PrimaryGreen[600],
+  primaryMuted: PrimaryGreen[100],
+  primaryBg: `${PrimaryGreen[500]}12`,
+  primaryBgStrong: `${PrimaryGreen[500]}1A`,
 
   // Text
-  textPrimary: '#1F2937',
+  textPrimary: DarkGreen[950],
   textSecondary: '#6B7280',
   textMuted: '#9CA3AF',
-  textDark: '#1F2937',
-  textGreen: '#22C55E',
+  textDark: DarkGreen[950],
+  textGreen: PrimaryGreen[500],
   textRed: '#DC2626',
 
   // Status
-  success: '#22C55E',
+  success: PrimaryGreen[500],
   error: '#DC2626',
   warning: '#F59E0B',
   info: '#3B82F6',
@@ -106,21 +136,21 @@ const LightColors: ColorScheme = {
   borderMuted: '#D1D5DB',
 
   // Button
-  buttonPrimary: '#22C55E',
+  buttonPrimary: PrimaryGreen[500],
   buttonPrimaryText: '#FFFFFF',
-  buttonSecondary: '#F0F0F2',
-  buttonSecondaryText: '#22C55E',
+  buttonSecondary: PrimaryGreen[50],
+  buttonSecondaryText: PrimaryGreen[600],
   buttonEnabled: '#9CA3AF',
   buttonDisabled: '#E5E7EB',
   buttonDisabledText: '#9CA3AF',
 
   // Alert banner
-  alertBg: 'rgba(34, 197, 94, 0.06)',
-  alertBorder: 'rgba(34, 197, 94, 0.15)',
+  alertBg: `${PrimaryGreen[500]}0F`,
+  alertBorder: `${PrimaryGreen[500]}26`,
 
   // Tab bar
   tabBarBg: '#FFFFFF',
-  tabBarActive: '#22C55E',
+  tabBarActive: PrimaryGreen[500],
   tabBarInactive: '#9CA3AF',
 
   // Misc
@@ -130,7 +160,7 @@ const LightColors: ColorScheme = {
   black: '#000000',
 
   // Chart
-  chartLine: '#22C55E',
+  chartLine: PrimaryGreen[500],
   chartGrid: '#E5E7EB',
 } as const;
 
@@ -140,6 +170,12 @@ export const Colors = DarkColors;
 export const ThemeColors = {
   dark: DarkColors,
   light: LightColors,
+} as const;
+
+// 팔레트 export
+export const Palette = {
+  PrimaryGreen,
+  DarkGreen,
 } as const;
 
 export type ColorKeys = keyof typeof Colors;

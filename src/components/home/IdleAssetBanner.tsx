@@ -3,16 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FontWeight, Spacing, BorderRadius } from '../../constants';
 import { useColors } from '../../hooks/useColors';
-import { formatKRW } from '../../utils/format';
+import { useExchangeRate } from '../../hooks/useExchangeRate';
+import { formatUSD, formatKRW } from '../../utils/format';
 
 interface IdleAssetBannerProps {
-  idleAmount: number;
+  idleAmount: number; // USD 금액
   onClose: () => void;
   onPress: () => void;
 }
 
 export default function IdleAssetBanner({ idleAmount, onClose, onPress }: IdleAssetBannerProps) {
   const colors = useColors();
+  const { rate } = useExchangeRate();
+  const krwAmount = idleAmount * rate;
 
   return (
     <TouchableOpacity
@@ -25,9 +28,14 @@ export default function IdleAssetBanner({ idleAmount, onClose, onPress }: IdleAs
     >
       <View style={styles.content}>
         <Ionicons name="information-circle" size={18} color={colors.primary} />
-        <Text style={[styles.text, { color: colors.textSecondary }]}>
-          현재 쉬고 있는 자산이 <Text style={[styles.highlight, { color: colors.primary }]}>{formatKRW(idleAmount)}원</Text>이 있어요
-        </Text>
+        <View style={styles.textContainer}>
+          <Text style={[styles.text, { color: colors.textSecondary }]}>
+            현재 쉬고 있는 자산이 <Text style={[styles.highlight, { color: colors.primary }]}>${formatUSD(idleAmount)}</Text> 있어요
+          </Text>
+          <Text style={[styles.subText, { color: colors.textMuted }]}>
+            약 {formatKRW(krwAmount)}원
+          </Text>
+        </View>
       </View>
       <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
         <Ionicons name="close" size={18} color={colors.textMuted} />
@@ -50,13 +58,19 @@ const styles = StyleSheet.create({
   },
   content: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flex: 1,
     gap: Spacing.sm,
   },
+  textContainer: {
+    flex: 1,
+  },
   text: {
     fontSize: 13,
-    flex: 1,
+  },
+  subText: {
+    fontSize: 11,
+    marginTop: 2,
   },
   highlight: {
     fontWeight: FontWeight.semibold,

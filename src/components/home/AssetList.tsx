@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FontWeight, Spacing } from '../../constants';
+import { Ionicons } from '@expo/vector-icons';
+import { FontWeight, Spacing, BorderRadius } from '../../constants';
 import { useColors } from '../../hooks/useColors';
 import AssetListItem, { AssetData } from './AssetListItem';
 
@@ -21,14 +22,23 @@ export default function AssetList({ assets, onAssetPress, onSeeAll }: AssetListP
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={[styles.headerTitle, { color: colors.textSecondary }]}>Name</Text>
-          <Text style={[styles.sortIcon, { color: colors.textMuted }]}> ↑↓</Text>
+      {/* 섹션 헤더 */}
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionTitleRow}>
+          <Ionicons name="wallet-outline" size={18} color={colors.warning} />
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            미예치 자산
+          </Text>
         </View>
-        <TouchableOpacity onPress={onSeeAll}>
-          <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
-        </TouchableOpacity>
+        <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+          예치하면 이자 수익을 받을 수 있어요
+        </Text>
+      </View>
+
+      {/* 자산 목록 헤더 */}
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.textMuted }]}>보유 자산</Text>
+        <Text style={[styles.headerTitle, { color: colors.textMuted }]}>예치 시 예상 연 수익</Text>
       </View>
 
       {displayedAssets.map((asset) => (
@@ -40,6 +50,18 @@ export default function AssetList({ assets, onAssetPress, onSeeAll }: AssetListP
           <Text style={[styles.moreText, { color: colors.textMuted }]}>+ More</Text>
         </TouchableOpacity>
       )}
+
+      {/* 예치하기 버튼 */}
+      <TouchableOpacity
+        style={[styles.depositButton, { backgroundColor: colors.primaryBg }]}
+        onPress={onSeeAll}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add-circle" size={18} color={colors.primary} />
+        <Text style={[styles.depositButtonText, { color: colors.primary }]}>
+          상품 보고 예치하기
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -49,26 +71,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
   },
+  sectionHeader: {
+    marginBottom: Spacing.md,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: FontWeight.bold,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingBottom: Spacing.sm,
   },
   headerTitle: {
-    fontSize: 14,
-    fontWeight: FontWeight.medium,
-  },
-  sortIcon: {
     fontSize: 12,
-  },
-  seeAll: {
-    fontSize: 13,
-    fontWeight: FontWeight.medium,
   },
   moreButton: {
     paddingVertical: Spacing.md,
@@ -77,5 +103,18 @@ const styles = StyleSheet.create({
   moreText: {
     fontSize: 13,
     fontWeight: FontWeight.medium,
+  },
+  depositButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.sm,
+  },
+  depositButtonText: {
+    fontSize: 14,
+    fontWeight: FontWeight.semibold,
   },
 });

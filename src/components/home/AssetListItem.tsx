@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FontWeight, Spacing } from '../../constants';
+import { FontWeight, Spacing, BorderRadius, getTokenLogo } from '../../constants';
 import { useColors } from '../../hooks/useColors';
 import { formatUSD, formatPercentage } from '../../utils/format';
 
@@ -22,7 +22,7 @@ interface AssetListItemProps {
 
 export default function AssetListItem({ asset, onPress }: AssetListItemProps) {
   const colors = useColors();
-  const isPositive = asset.yieldRate >= 0;
+  const tokenLogo = getTokenLogo(asset.symbol);
 
   return (
     <TouchableOpacity
@@ -32,20 +32,33 @@ export default function AssetListItem({ asset, onPress }: AssetListItemProps) {
     >
       <View style={styles.leftSection}>
         <View style={[styles.iconContainer, { backgroundColor: asset.iconColor }]}>
-          <Text style={styles.iconText}>{asset.symbol.charAt(0)}</Text>
+          {tokenLogo ? (
+            <Image source={tokenLogo} style={styles.tokenLogo} />
+          ) : (
+            <Text style={styles.iconText}>{asset.symbol.charAt(0)}</Text>
+          )}
         </View>
-        <Text style={[styles.symbol, { color: colors.textPrimary }]}>{asset.symbol}</Text>
-        <Ionicons name="add-circle" size={14} color={colors.primary} style={styles.addIcon} />
+        <View style={styles.assetInfo}>
+          <Text style={[styles.symbol, { color: colors.textPrimary }]}>{asset.symbol}</Text>
+          <Text style={[styles.balance, { color: colors.textSecondary }]}>
+            ${formatUSD(asset.balance)}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.rightSection}>
-        <Text style={[styles.balance, { color: colors.textPrimary }]}>
-          {formatUSD(asset.balance)} <Text style={[styles.currency, { color: colors.textSecondary }]}>{asset.currency}</Text>
-        </Text>
-        <Text style={[styles.yieldLabel, { color: colors.textMuted }]}>예상 1년 수익금</Text>
-        <Text style={[styles.yieldAmount, { color: isPositive ? colors.textGreen : colors.textRed }]}>
-          {formatUSD(asset.estimatedYield)} ({formatPercentage(asset.yieldRate)})
-        </Text>
+        <View style={[styles.yieldBadge, { backgroundColor: colors.primaryBg }]}>
+          <Text style={[styles.yieldAmount, { color: colors.primary }]}>
+            +${formatUSD(asset.estimatedYield)}
+          </Text>
+          <Text style={[styles.yieldRate, { color: colors.primary }]}>
+            /년 ({formatPercentage(asset.yieldRate * 100, false)})
+          </Text>
+        </View>
+        <View style={styles.depositHint}>
+          <Ionicons name="arrow-forward" size={12} color={colors.primary} />
+          <Text style={[styles.depositHintText, { color: colors.primary }]}>예치하기</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -56,50 +69,68 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: Spacing.sm,
   },
   iconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  tokenLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   iconText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: FontWeight.bold,
+  },
+  assetInfo: {
+    gap: 2,
   },
   symbol: {
     fontSize: 15,
     fontWeight: FontWeight.semibold,
   },
-  addIcon: {
-    marginLeft: 2,
+  balance: {
+    fontSize: 13,
   },
   rightSection: {
     alignItems: 'flex-end',
+    gap: 4,
   },
-  balance: {
-    fontSize: 15,
-    fontWeight: FontWeight.semibold,
-  },
-  currency: {
-    fontSize: 13,
-    fontWeight: FontWeight.regular,
-  },
-  yieldLabel: {
-    fontSize: 11,
-    marginTop: 2,
+  yieldBadge: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
   },
   yieldAmount: {
-    fontSize: 13,
-    fontWeight: FontWeight.semibold,
+    fontSize: 15,
+    fontWeight: FontWeight.bold,
+  },
+  yieldRate: {
+    fontSize: 11,
+    fontWeight: FontWeight.medium,
+  },
+  depositHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  depositHintText: {
+    fontSize: 11,
+    fontWeight: FontWeight.medium,
   },
 });

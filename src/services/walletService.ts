@@ -1,5 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import * as SecureStore from 'expo-secure-store';
 
 const WALLET_PRIVATE_KEY = 'TOOK_WALLET_PRIVATE_KEY';
 const WALLET_ADDRESS_KEY = 'TOOK_WALLET_ADDRESS';
@@ -10,22 +9,16 @@ export interface WalletInfo {
 }
 
 /**
- * 새 지갑 생성
- * - viem을 사용하여 랜덤 프라이빗 키 생성
- * - AsyncStorage에 저장
- * - 프로덕션에서는 expo-secure-store 사용 권장
+ * Web3Auth 지갑 저장 (SecureStore 사용)
+ * - Web3Auth에서 받은 프라이빗 키와 주소 저장
+ * - 같은 이메일로 로그인하면 항상 같은 키 반환 (MPC 기반)
  */
-export const createWallet = async (): Promise<WalletInfo> => {
-  // 랜덤 프라이빗 키 생성
-  const privateKey = generatePrivateKey();
-  const account = privateKeyToAccount(privateKey);
-
-  // AsyncStorage에 저장
-  await AsyncStorage.setItem(WALLET_PRIVATE_KEY, privateKey);
-  await AsyncStorage.setItem(WALLET_ADDRESS_KEY, account.address);
+export const saveWeb3AuthWallet = async (privateKey: string, address: string): Promise<WalletInfo> => {
+  await SecureStore.setItemAsync(WALLET_PRIVATE_KEY, privateKey);
+  await SecureStore.setItemAsync(WALLET_ADDRESS_KEY, address);
 
   return {
-    address: account.address,
+    address,
     privateKey,
   };
 };
@@ -34,8 +27,8 @@ export const createWallet = async (): Promise<WalletInfo> => {
  * 저장된 지갑 불러오기
  */
 export const getStoredWallet = async (): Promise<WalletInfo | null> => {
-  const privateKey = await AsyncStorage.getItem(WALLET_PRIVATE_KEY);
-  const address = await AsyncStorage.getItem(WALLET_ADDRESS_KEY);
+  const privateKey = await SecureStore.getItemAsync(WALLET_PRIVATE_KEY);
+  const address = await SecureStore.getItemAsync(WALLET_ADDRESS_KEY);
 
   if (privateKey && address) {
     return { address, privateKey };
@@ -48,21 +41,21 @@ export const getStoredWallet = async (): Promise<WalletInfo | null> => {
  * 지갑 주소만 불러오기
  */
 export const getStoredWalletAddress = async (): Promise<string | null> => {
-  return await AsyncStorage.getItem(WALLET_ADDRESS_KEY);
+  return await SecureStore.getItemAsync(WALLET_ADDRESS_KEY);
 };
 
 /**
- * 지갑 삭제
+ * 지갑 삭제 (로그아웃 시 호출)
  */
 export const deleteWallet = async (): Promise<void> => {
-  await AsyncStorage.removeItem(WALLET_PRIVATE_KEY);
-  await AsyncStorage.removeItem(WALLET_ADDRESS_KEY);
+  await SecureStore.deleteItemAsync(WALLET_PRIVATE_KEY);
+  await SecureStore.deleteItemAsync(WALLET_ADDRESS_KEY);
 };
 
 /**
  * 지갑 존재 여부 확인
  */
 export const hasStoredWallet = async (): Promise<boolean> => {
-  const address = await AsyncStorage.getItem(WALLET_ADDRESS_KEY);
+  const address = await SecureStore.getItemAsync(WALLET_ADDRESS_KEY);
   return !!address;
 };

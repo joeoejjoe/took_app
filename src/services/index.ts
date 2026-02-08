@@ -33,8 +33,15 @@ export {
   toggleFavoriteProduct,
   getFavoriteProducts,
   initializeProducts,
+  // 블록체인 상품 통계
+  recordBlockchainDeposit,
+  recordBlockchainWithdrawal,
+  deleteBlockchainDeposit,
+  getPlatformStats,
+  getAllPlatformStats,
+  getUserBlockchainDeposits,
 } from './productService';
-export type { Product, Deposit } from './productService';
+export type { Product, Deposit, BlockchainDeposit } from './productService';
 
 // Transfer Service
 export {
@@ -60,12 +67,65 @@ export {
 } from './exchangeService';
 export type { ExchangeTransaction, ExchangeRate, RateHistory } from './exchangeService';
 
-// Wallet Service
+// Privy Service (MPC Wallet)
 export {
-  createWallet,
-  getStoredWallet,
+  savePrivyWallet,
   getStoredWalletAddress,
+  clearWalletAddress,
+  savePrivyUser,
+  getStoredPrivyUser,
+  clearPrivyUser,
+} from './privyService';
+export type { PrivyWallet, PrivyUserInfo } from './privyService';
+
+// Wallet Service (Secure Storage) - Legacy, can be removed later
+export {
+  getStoredWallet,
   deleteWallet,
   hasStoredWallet,
 } from './walletService';
 export type { WalletInfo } from './walletService';
+
+// Blockchain Service
+export {
+  publicClient,
+  TOKEN_ADDRESSES,
+  getEthBalance,
+  getTokenBalance,
+  getAllBalances,
+  sendEth,
+  sendToken,
+  waitForTransaction,
+  getNetworkInfo,
+  getExplorerTxUrl,
+  getExplorerAddressUrl,
+} from './blockchainService';
+export type { TokenBalance, WalletBalances } from './blockchainService';
+
+// Midas mHYPER Service
+export {
+  MHYPER_ADDRESS,
+  MHYPER_PRODUCT,
+  BLOCKCHAIN_PRODUCTS,
+  getBlockchainProductById,
+  getMHyperBalance,
+  getMHyperInfo,
+  getUsdcAllowance,
+  approveUsdc,
+  depositToMHyper,
+  withdrawFromMHyper,
+  calculateEstimatedYield,
+  previewDeposit,
+  // Aave sGHO
+  SGHO_ADDRESS,
+  GHO_ADDRESS,
+  SGHO_PRODUCT,
+  getSGhoBalance,
+  getSGhoInfo,
+  depositToSGho,
+  withdrawFromSGho,
+} from './midasService';
+export type { BlockchainProduct, MHyperBalance, MHyperInfo, SGhoBalance, SGhoInfo } from './midasService';
+
+// OTP Service
+export { sendOTP, verifyOTPAndLogin } from './otpService';

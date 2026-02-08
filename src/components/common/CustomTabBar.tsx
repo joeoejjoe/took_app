@@ -11,7 +11,7 @@ const TAB_CONFIG: Record<string, { icon: IconName; iconFocused: IconName; label:
   Home: { icon: 'home-outline', iconFocused: 'home', label: 'Home' },
   Products: { icon: 'grid-outline', iconFocused: 'grid', label: 'Products' },
   Exchange: { icon: 'swap-horizontal-outline', iconFocused: 'swap-horizontal', label: 'Exchange' },
-  Transfer: { icon: 'arrow-up-outline', iconFocused: 'arrow-up', label: 'Transfer' },
+  Ranking: { icon: 'trophy-outline', iconFocused: 'trophy', label: 'Ranking' },
   My: { icon: 'person-outline', iconFocused: 'person', label: 'My' },
 };
 

@@ -1,13 +1,7 @@
-import { createAppKit, defaultWagmiConfig } from '@reown/appkit-wagmi-react-native';
+import { defaultWagmiConfig } from '@reown/appkit-wagmi-react-native';
 import { mainnet, sepolia } from 'viem/chains';
 
 const projectId = process.env.EXPO_PUBLIC_REOWN_PROJECT_ID || '';
-
-if (!projectId) {
-  console.warn(
-    '[AppKit] EXPO_PUBLIC_REOWN_PROJECT_ID is not set. Get one at https://cloud.reown.com'
-  );
-}
 
 const metadata = {
   name: 'TOOK',
@@ -21,20 +15,9 @@ const metadata = {
 
 const chains = [mainnet, sepolia] as const;
 
+// Wagmi 설정 (viem 연동용)
 export const wagmiConfig = defaultWagmiConfig({
   chains,
   projectId,
   metadata,
-});
-
-createAppKit({
-  projectId,
-  wagmiConfig,
-  defaultChain: sepolia,
-  enableAnalytics: false,
-  features: {
-    email: true,              // 이메일 지갑 생성 활성화
-    emailShowWallets: true,   // 외부 지갑 연결 옵션도 표시
-    socials: ['apple'],       // Apple 로그인 지원
-  },
 });

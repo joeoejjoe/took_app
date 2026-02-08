@@ -1,3 +1,11 @@
+// Polyfills must be imported first - order matters!
+import 'react-native-get-random-values';
+import { Buffer } from 'buffer';
+global.Buffer = global.Buffer || Buffer;
+
+// TextEncoder/TextDecoder polyfill
+import 'fast-text-encoding';
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';

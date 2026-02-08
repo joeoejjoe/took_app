@@ -5,8 +5,14 @@ import {
   signInWithEmail,
   logOut,
   getUserProfile,
+  updateUserProfile,
   subscribeToAuthState,
   initializeUserAssets,
+  getStoredWallet,
+  connectWallet,
+  deleteWallet,
+  clearPrivyUser,
+  getStoredWalletAddress,
 } from '../services';
 import type { UserProfile } from '../services';
 
@@ -37,6 +43,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   initializeAuth: () => () => void;
   loadUserProfile: () => Promise<void>;
+  updateNickname: (nickname: string) => Promise<void>;
 
   reset: () => void;
 }
@@ -82,9 +89,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const user = await signInWithEmail(email, password);
-      // currentScreen은 변경하지 않음 - AuthNavigator에서 지갑 연결 후 이동
       set({ user, isAuthenticated: true });
-      await get().loadUserProfile();
+
+      // 프로필 로드 및 지갑 주소 확인
+      const profile = await getUserProfile(user.uid);
+      set({ userProfile: profile });
+
+      // 기존 지갑 주소가 있으면 설정
+      if (profile?.walletAddress) {
+        set({ walletAddress: profile.walletAddress });
+      } else {
+        // Privy 지갑 확인
+        const privyWalletAddress = await getStoredWalletAddress();
+        if (privyWalletAddress) {
+          try {
+            await connectWallet(user.uid, privyWalletAddress);
+          } catch (e) {
+            console.log('Failed to sync Privy wallet to Firebase');
+          }
+          set({ walletAddress: privyWalletAddress });
+        } else {
+          // 레거시 로컬 지갑 확인
+          const storedWallet = await getStoredWallet();
+          if (storedWallet) {
+            try {
+              await connectWallet(user.uid, storedWallet.address);
+            } catch (e) {
+              console.log('Failed to sync wallet to Firebase');
+            }
+            set({ walletAddress: storedWallet.address });
+          }
+        }
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.';
       set({ error: errorMessage });
@@ -98,6 +134,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     set({ isLoading: true });
     try {
+      // Privy 로컬 데이터 삭제
+      try {
+        await clearPrivyUser();
+      } catch (e) {
+        console.log('Privy data clear skipped');
+      }
+
+      // 로컬 지갑 데이터 삭제 (다른 유저 로그인 시 혼동 방지)
+      try {
+        await deleteWallet();
+      } catch (e) {
+        console.log('Local wallet delete skipped');
+      }
+
       await logOut();
       set({
         user: null,
@@ -123,16 +173,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
           const profile = await getUserProfile(user.uid);
           set({ userProfile: profile });
+
+          // 1. Firebase 프로필에 지갑 주소가 있으면 사용
           if (profile?.walletAddress) {
-            // 지갑 주소가 있으면 메인으로
             set({ walletAddress: profile.walletAddress, currentScreen: 'main' });
-          } else {
-            // 지갑 주소가 없으면 인증 화면(지갑 연결 단계)으로
-            set({ currentScreen: 'auth' });
+            return;
           }
+
+          // 2. Privy에서 저장된 지갑 주소 확인
+          const privyWalletAddress = await getStoredWalletAddress();
+          if (privyWalletAddress) {
+            try {
+              await connectWallet(user.uid, privyWalletAddress);
+            } catch (e) {
+              console.log('Failed to sync Privy wallet to Firebase');
+            }
+            set({ walletAddress: privyWalletAddress, currentScreen: 'main' });
+            return;
+          }
+
+          // 3. 레거시 로컬 지갑 확인 & Firebase에 동기화
+          const storedWallet = await getStoredWallet();
+          if (storedWallet) {
+            try {
+              await connectWallet(user.uid, storedWallet.address);
+            } catch (e) {
+              console.log('Failed to sync wallet to Firebase');
+            }
+            set({ walletAddress: storedWallet.address, currentScreen: 'main' });
+            return;
+          }
+
+          // 4. 지갑이 없으면 지갑 연결 화면으로
+          set({ currentScreen: 'auth' });
         } catch (error) {
           console.error('Failed to load user profile:', error);
-          // 프로필 로드 실패 시 인증 화면으로
           set({ currentScreen: 'auth' });
         }
       } else {
@@ -153,6 +228,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('Failed to load user profile:', error);
     }
+  },
+
+  // 닉네임 업데이트
+  updateNickname: async (nickname: string) => {
+    const { user, userProfile } = get();
+    if (!user) throw new Error('로그인이 필요합니다.');
+
+    await updateUserProfile(user.uid, { displayName: nickname });
+    set({
+      userProfile: userProfile
+        ? { ...userProfile, displayName: nickname }
+        : null,
+    });
   },
 
   // 리셋

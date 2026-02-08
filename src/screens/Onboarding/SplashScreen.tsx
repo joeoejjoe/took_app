@@ -1,17 +1,50 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { FontWeight } from '../../constants';
-import { useColors } from '../../hooks/useColors';
 
 interface SplashScreenProps {
   onFinish: () => void;
 }
 
+// TOOK 로고 컴포넌트 (둥근 사각형 + 노치)
+function TookLogo({ size = 120, color = '#FFFFFF' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 100 100">
+      {/* 둥근 사각형 외곽 + 왼쪽 위 노치 */}
+      <Path
+        d="M35 8
+           L75 8
+           C88 8 92 12 92 25
+           L92 75
+           C92 88 88 92 75 92
+           L25 92
+           C12 92 8 88 8 75
+           L8 35
+           C8 28 10 25 15 22
+           L22 15
+           C25 10 28 8 35 8
+           Z"
+        fill={color}
+      />
+      {/* 내부 구멍 (도넛 모양) */}
+      <Path
+        d="M50 30
+           C39 30 30 39 30 50
+           C30 61 39 70 50 70
+           C61 70 70 61 70 50
+           C70 39 61 30 50 30
+           Z"
+        fill="#4ADE80"
+      />
+    </Svg>
+  );
+}
+
 export default function SplashScreen({ onFinish }: SplashScreenProps) {
-  const colors = useColors();
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.8)).current;
-  const taglineOpacity = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
@@ -19,7 +52,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
-          duration: 600,
+          duration: 500,
           useNativeDriver: true,
         }),
         Animated.spring(logoScale, {
@@ -29,14 +62,14 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           useNativeDriver: true,
         }),
       ]),
-      // Tagline fade in
-      Animated.timing(taglineOpacity, {
+      // Text fade in
+      Animated.timing(textOpacity, {
         toValue: 1,
-        duration: 400,
+        duration: 300,
         useNativeDriver: true,
       }),
       // Hold
-      Animated.delay(800),
+      Animated.delay(1000),
       // Fade out all
       Animated.parallel([
         Animated.timing(logoOpacity, {
@@ -44,7 +77,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           duration: 300,
           useNativeDriver: true,
         }),
-        Animated.timing(taglineOpacity, {
+        Animated.timing(textOpacity, {
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
@@ -53,31 +86,26 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
     ]).start(() => {
       onFinish();
     });
-  }, [logoOpacity, logoScale, taglineOpacity, onFinish]);
+  }, [logoOpacity, logoScale, textOpacity, onFinish]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Animated.View
-        style={[
-          styles.logoContainer,
-          {
-            opacity: logoOpacity,
-            transform: [{ scale: logoScale }],
-          },
-        ]}
-      >
-        <View style={[styles.logoIcon, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.logoIconText, { color: colors.background }]}>T</Text>
-        </View>
-        <Text style={[styles.logoText, { color: colors.textPrimary }]}>TOOK</Text>
-      </Animated.View>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            {
+              opacity: logoOpacity,
+              transform: [{ scale: logoScale }],
+            },
+          ]}
+        >
+          <TookLogo size={140} color="#FFFFFF" />
+        </Animated.View>
 
-      <Animated.Text style={[styles.tagline, { color: colors.textSecondary, opacity: taglineOpacity }]}>
-        이자를 툭! 받아가세요
-      </Animated.Text>
-
-      <View style={styles.bottomContainer}>
-        <Text style={[styles.version, { color: colors.textMuted }]}>Stablecoin Yield Platform</Text>
+        <Animated.Text style={[styles.logoText, { opacity: textOpacity }]}>
+          took
+        </Animated.Text>
       </View>
     </View>
   );
@@ -86,40 +114,20 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#4ADE80',
+  },
+  content: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoContainer: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  logoIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoIconText: {
-    fontSize: 40,
-    fontWeight: FontWeight.bold,
+    marginBottom: 24,
   },
   logoText: {
-    fontSize: 42,
-    fontWeight: FontWeight.extrabold,
-    letterSpacing: 6,
-  },
-  tagline: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: FontWeight.medium,
-  },
-  bottomContainer: {
-    position: 'absolute',
-    bottom: 60,
-    alignItems: 'center',
-  },
-  version: {
-    fontSize: 12,
+    fontSize: 48,
+    fontWeight: FontWeight.bold,
+    color: '#FFFFFF',
+    letterSpacing: 2,
   },
 });
